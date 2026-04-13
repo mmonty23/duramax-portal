@@ -307,7 +307,7 @@ main { flex: 1; overflow-y: auto; background: var(--bg); }
 // Replace inline here OR load dynamically
 const SUPABASE_URL     = "https://ftioogukfybrnkfiydym.supabase.co";
 const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0aW9vZ3VrZnlicm5rZml5ZHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzU0ODYsImV4cCI6MjA5MTYxMTQ4Nn0.6RxFBUMYKd-011ZuhJCQ2ix86Dbpfwoexyy2ZDhQoiw";
-const ADMIN_SECRET     = "Duramax-Portal-2025!";
+const ADMIN_SECRET     = "Duramax2025!";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -317,11 +317,13 @@ let currentClientId = null;
 // ── Auth ──────────────────────────────────────────────────────
 sb.auth.onAuthStateChange(async (event, session) => {
   if (!session) { show("view-login"); return; }
-  // Verify admin role
-  const { data: profile } = await sb.from("profiles").select("role").eq("id", session.user.id).single();
-  if (!profile || profile.role !== "admin") {
-    await sb.auth.signOut(); show("view-login");
-    showErr("login-error", "Access denied — admin accounts only."); return;
+  // Simple admin check by email — avoids RLS circular dependency
+  const adminEmails = ["mark@duramaxpavingllc.com"];
+  if (!adminEmails.includes(session.user.email)) {
+    await sb.auth.signOut();
+    show("view-login");
+    showErr("login-error", "Access denied.");
+    return;
   }
   show("view-app");
   loadClients();
@@ -335,7 +337,8 @@ async function login() {
 }
 
 async function logout() {
-  await sb.auth.signOut(); show("view-login");
+  await sb.auth.signOut();
+  show("view-login");
 }
 
 // ── Load Clients ──────────────────────────────────────────────
