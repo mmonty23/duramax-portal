@@ -42,28 +42,50 @@ exports.handler = async (event) => {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
   try {
-    // 1. Generate slug clientId
-    const clientId = clientName
+    // 1. Generate slug clientId — include project for uniqueness
+    const baseSlug = clientName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "")
       .slice(0, 40);
 
+    const projectSlug = (projectName || "general")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+      .slice(0, 30);
+
+    const clientId = `${baseSlug}-${projectSlug}`;
+
     // 2. Generate temp password
     const tempPassword = generatePassword();
 
-    // 3. Create Supabase Auth user
+    // 3. Try to create Supabase Auth user — if email exists, reuse them
+    let uid;
     const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
       email: contactEmail,
       password: tempPassword,
-      email_confirm: true,           // skip email verification flow
+      email_confirm: true,
       user_metadata: { full_name: clientName, client_id: clientId, role: "client" },
     });
 
-    if (authErr) throw new Error("Auth error: " + authErr.message);
-    const uid = authData.user.id;
+    if (authErr && authErr.message.includes("already been registered")) {
+      // User exists — look them up and reuse their uid
+      const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers();
+      if (listErr) throw new Error("Failed to look up existing user: " + listErr.message);
+      const existing = users.find(u => u.email === contactEmail);
+      if (!existing) throw new Error("User reported as existing but could not be found");
+      uid = existing.id;
 
-    // 4. Upsert profile row
+      // Reset their password so the new email has valid creds
+      await supabase.auth.admin.updateUserById(uid, { password: tempPassword });
+    } else if (authErr) {
+      throw new Error("Auth error: " + authErr.message);
+    } else {
+      uid = authData.user.id;
+    }
+
+    // 4. Upsert profile row — update client_id to latest folder
     const { error: profErr } = await supabase.from("profiles").upsert({
       id: uid,
       email: contactEmail,
@@ -73,7 +95,7 @@ exports.handler = async (event) => {
     });
     if (profErr) throw new Error("Profile error: " + profErr.message);
 
-    // 5. Upsert client row
+    // 5. Insert client row (new folder for this project)
     const storagePath = `clients/${clientId}/`;
     const { error: clientErr } = await supabase.from("clients").upsert({
       id: clientId,

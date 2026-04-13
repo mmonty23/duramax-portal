@@ -1176,6 +1176,7 @@
       <div class="cc-footer">
         <button class="cc-btn" onclick="event.stopPropagation();openDetail('${c.id}')">Open Folder</button>
         <button class="cc-btn cc-btn-warn" onclick="event.stopPropagation();resendCreds('${c.id}')">Resend Login</button>
+        <button class="cc-btn" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation();deleteClient('${c.id}','${c.name.replace(/'/g, "\\'")}')">Delete</button>
       </div>
     </div>`).join("");
     }
@@ -1321,6 +1322,38 @@
       } catch (err) { toast("Error: " + err.message, true); }
     }
 
+    // ── Delete Client ────────────────────────────────────────────
+    async function deleteClient(clientId, clientName) {
+      if (!confirm(`Delete "${clientName}" and all their files? This cannot be undone.`)) return;
+      if (!confirm(`Are you sure? This will permanently remove the folder, all files, and the client account.`)) return;
+      try {
+        // 1. Delete all files in storage folder
+        const { data: files } = await sb.storage.from("client-files").list(`clients/${clientId}`);
+        if (files && files.length) {
+          const paths = files.map(f => `clients/${clientId}/${f.name}`);
+          await sb.storage.from("client-files").remove(paths);
+        }
+
+        // 2. Delete file metadata rows
+        await sb.from("files").delete().eq("client_id", clientId);
+
+        // 3. Find and delete the auth user via profile
+        const { data: profile } = await sb.from("profiles").select("id").eq("client_id", clientId).single();
+
+        // 4. Delete client row (cascades won't cover auth)
+        await sb.from("clients").delete().eq("id", clientId);
+
+        // 5. Delete profile row if found
+        if (profile) {
+          await sb.from("profiles").delete().eq("id", profile.id);
+        }
+
+        toast(`"${clientName}" deleted`);
+        showDash();
+        loadClients();
+      } catch (err) { toast("Error: " + err.message, true); }
+    }
+
     // ── Share / Email ─────────────────────────────────────────────
     function copyClientLink() {
       navigator.clipboard.writeText(document.getElementById("d-link").textContent);
@@ -1340,7 +1373,8 @@
       ["view-login", "view-app"].forEach(v => document.getElementById(v).classList.toggle("hidden", v !== id));
     }
     function showPanel(id) {
-      ["panel-dash", "panel-detail"].forEach(p => document.getElementById("panel-" + p)?.classList.toggle("hidden", p !== id));
+      document.getElementById("panel-dash")?.classList.toggle("hidden", id !== "dash");
+      document.getElementById("panel-detail")?.classList.toggle("hidden", id !== "detail");
     }
     function showDash() { showPanel("dash"); document.getElementById("sb-dash-btn").classList.add("active"); }
     function ini(name) { return (name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(); }
