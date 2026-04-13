@@ -1,7 +1,7 @@
 // functions/create-client.js
 // ─────────────────────────────────────────────────────────────
 // POST /.netlify/functions/create-client
-// Header: x-admin-secret: <ADMIN_SECRET env var>
+// Header: Authorization: Bearer <supabase-jwt>
 // Body:   { clientName, contactEmail, projectName }
 //
 // What it does:
@@ -12,14 +12,18 @@
 // ─────────────────────────────────────────────────────────────
 
 const { createClient } = require("@supabase/supabase-js");
-const sgMail           = require("@sendgrid/mail");
+const sgMail = require("@sendgrid/mail");
+const { verifyAdmin } = require("./verify-admin");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST")
     return { statusCode: 405, body: "Method Not Allowed" };
 
-  if (event.headers["x-admin-secret"] !== process.env.ADMIN_SECRET)
-    return { statusCode: 401, body: "Unauthorized" };
+  // Verify caller is a logged-in admin via their Supabase JWT
+  const auth = await verifyAdmin(event);
+  if (auth.error) {
+    return { statusCode: auth.statusCode, body: JSON.stringify({ success: false, error: auth.error }) };
+  }
 
   let body;
   try { body = JSON.parse(event.body); }
@@ -50,10 +54,10 @@ exports.handler = async (event) => {
 
     // 3. Create Supabase Auth user
     const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
-      email:             contactEmail,
-      password:          tempPassword,
-      email_confirm:     true,           // skip email verification flow
-      user_metadata:     { full_name: clientName, client_id: clientId, role: "client" },
+      email: contactEmail,
+      password: tempPassword,
+      email_confirm: true,           // skip email verification flow
+      user_metadata: { full_name: clientName, client_id: clientId, role: "client" },
     });
 
     if (authErr) throw new Error("Auth error: " + authErr.message);
@@ -61,9 +65,9 @@ exports.handler = async (event) => {
 
     // 4. Upsert profile row
     const { error: profErr } = await supabase.from("profiles").upsert({
-      id:        uid,
-      email:     contactEmail,
-      role:      "client",
+      id: uid,
+      email: contactEmail,
+      role: "client",
       client_id: clientId,
       full_name: clientName,
     });
@@ -72,21 +76,21 @@ exports.handler = async (event) => {
     // 5. Upsert client row
     const storagePath = `clients/${clientId}/`;
     const { error: clientErr } = await supabase.from("clients").upsert({
-      id:           clientId,
-      name:         clientName,
-      email:        contactEmail,
+      id: clientId,
+      name: clientName,
+      email: contactEmail,
       project_name: projectName || "General",
       storage_path: storagePath,
-      active:       true,
+      active: true,
     });
     if (clientErr) throw new Error("Client error: " + clientErr.message);
 
     // 6. Send branded welcome email
     const portalUrl = process.env.CLIENT_PORTAL_URL || "https://files.duramaxpavingllc.com/client";
-    const loginUrl  = `${portalUrl}?client=${clientId}`;
+    const loginUrl = `${portalUrl}?client=${clientId}`;
 
     await sgMail.send({
-      to:   contactEmail,
+      to: contactEmail,
       from: { email: process.env.ADMIN_EMAIL, name: "Duramax Industrial Paving & Concrete" },
       subject: `Duramax – Your Secure File Portal | ${projectName || clientName}`,
       html: buildEmailHtml({ clientName, projectName, loginUrl, contactEmail, tempPassword }),

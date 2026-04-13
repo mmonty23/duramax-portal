@@ -3,14 +3,18 @@
 // Body: { clientId }
 
 const { createClient } = require("@supabase/supabase-js");
-const sgMail           = require("@sendgrid/mail");
+const sgMail = require("@sendgrid/mail");
+const { verifyAdmin } = require("./verify-admin");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST")
     return { statusCode: 405, body: "Method Not Allowed" };
 
-  if (event.headers["x-admin-secret"] !== process.env.ADMIN_SECRET)
-    return { statusCode: 401, body: "Unauthorized" };
+  // Verify caller is a logged-in admin via their Supabase JWT
+  const auth = await verifyAdmin(event);
+  if (auth.error) {
+    return { statusCode: auth.statusCode, body: JSON.stringify({ success: false, error: auth.error }) };
+  }
 
   const { clientId } = JSON.parse(event.body || "{}");
   if (!clientId) return { statusCode: 400, body: "clientId required" };
@@ -41,10 +45,10 @@ exports.handler = async (event) => {
 
     // Re-send email
     const portalUrl = process.env.CLIENT_PORTAL_URL || "https://files.duramaxpavingllc.com/client";
-    const loginUrl  = `${portalUrl}?client=${clientId}`;
+    const loginUrl = `${portalUrl}?client=${clientId}`;
 
     await sgMail.send({
-      to:   client.email,
+      to: client.email,
       from: { email: process.env.ADMIN_EMAIL, name: "Duramax Industrial Paving & Concrete" },
       subject: `Duramax – Updated Portal Access | ${client.project_name}`,
       html: `

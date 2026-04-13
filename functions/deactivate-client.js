@@ -4,13 +4,17 @@
 // Disables auth login + marks client inactive (files preserved)
 
 const { createClient } = require("@supabase/supabase-js");
+const { verifyAdmin } = require("./verify-admin");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST")
     return { statusCode: 405, body: "Method Not Allowed" };
 
-  if (event.headers["x-admin-secret"] !== process.env.ADMIN_SECRET)
-    return { statusCode: 401, body: "Unauthorized" };
+  // Verify caller is a logged-in admin via their Supabase JWT
+  const auth = await verifyAdmin(event);
+  if (auth.error) {
+    return { statusCode: auth.statusCode, body: JSON.stringify({ success: false, error: auth.error }) };
+  }
 
   const { clientId } = JSON.parse(event.body || "{}");
   if (!clientId) return { statusCode: 400, body: "clientId required" };
