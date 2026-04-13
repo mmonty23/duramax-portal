@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Duramax – Admin Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -306,10 +307,9 @@ main { flex: 1; overflow-y: auto; background: var(--bg); }
 // Replace inline here OR load dynamically
 const SUPABASE_URL     = "https://ftioogukfybrnkfiydym.supabase.co";
 const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0aW9vZ3VrZnlicm5rZml5ZHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzU0ODYsImV4cCI6MjA5MTYxMTQ4Nn0.6RxFBUMYKd-011ZuhJCQ2ix86Dbpfwoexyy2ZDhQoiw";
-const ADMIN_SECRET     = "dx-portal-2026-secret!er";
+const ADMIN_SECRET     = "Duramax-Portal-2025!";
 
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let clients = [];
 let currentClientId = null;
@@ -550,6 +550,5 @@ function toast(msg, err = false) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 4000);
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
