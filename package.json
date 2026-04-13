@@ -1,0 +1,14 @@
+{
+  "name": "duramax-file-portal",
+  "version": "1.0.0",
+  "description": "Duramax Industrial Paving & Concrete – Client File Portal (Supabase)",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.0",
+    "@sendgrid/mail": "^8.1.0"
+  },
+  "scripts": {
+    "dev": "netlify dev"
+  }
+}
