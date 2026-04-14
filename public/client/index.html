@@ -544,7 +544,7 @@
     <div class="auth-card">
       <div class="auth-logo">
         <h1>Duramax Industrial Paving &amp; Concrete</h1>
-        <p>LLC</p>
+        <p>Client File Portal</p>
       </div>
       <h2>Client File Portal</h2>
       <div class="form-group">
@@ -567,16 +567,24 @@
     <div class="auth-card">
       <div class="auth-logo">
         <h1>Duramax Industrial Paving &amp; Concrete</h1>
-        <p>LLC</p>
+        <p>Client File Portal</p>
       </div>
       <div class="pw-notice">🔒 For your security, please create a personal password before continuing.</div>
       <div class="form-group">
         <label class="form-label">New Password</label>
-        <input type="password" id="pw-new" class="form-input" placeholder="At least 8 characters">
+        <div style="position:relative">
+          <input type="password" id="pw-new" class="form-input" placeholder="At least 8 characters">
+          <button type="button" onclick="togglePw('pw-new',this)"
+            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:13px;color:#8a9099">Show</button>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Confirm New Password</label>
-        <input type="password" id="pw-confirm" class="form-input" placeholder="Repeat password">
+        <div style="position:relative">
+          <input type="password" id="pw-confirm" class="form-input" placeholder="Repeat password">
+          <button type="button" onclick="togglePw('pw-confirm',this)"
+            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:13px;color:#8a9099">Show</button>
+        </div>
       </div>
       <button class="btn-full" onclick="setNewPassword()">Set My Password →</button>
       <div id="pw-error" class="error-msg"></div>
@@ -742,10 +750,22 @@
     }
 
     // ── Set New Password (first login) ───────────────────────────
+    function togglePw(fieldId, btn) {
+      var field = document.getElementById(fieldId);
+      if (field.type === "password") {
+        field.type = "text";
+        btn.textContent = "Hide";
+      } else {
+        field.type = "password";
+        btn.textContent = "Show";
+      }
+    }
+
     async function setNewPassword() {
       var newPw = document.getElementById("pw-new").value;
       var confPw = document.getElementById("pw-confirm").value;
       var errEl = document.getElementById("pw-error");
+      errEl.style.display = "none";
 
       if (newPw.length < 8) {
         errEl.textContent = "Password must be at least 8 characters.";
@@ -758,6 +778,7 @@
         return;
       }
 
+      // Update password and set pw_set flag
       var result = await sb.auth.updateUser({
         password: newPw,
         data: { pw_set: true }
@@ -771,17 +792,26 @@
 
       toast("Password set successfully!");
 
-      // Reload profile and enter portal
-      var sessRes = await sb.auth.getSession();
-      if (sessRes.data.session) {
-        currentUser = sessRes.data.session.user;
+      // The session metadata is now updated. Load profile and enter portal directly.
+      try {
+        currentUser = result.data.user;
         var profRes = await sb.from("profiles").select("role, client_id").eq("id", currentUser.id).single();
-        if (profRes.data && profRes.data.role === "client") {
-          clientId = profRes.data.client_id;
-          var cRes = await sb.from("clients").select("*").eq("id", clientId).single();
-          clientData = cRes.data;
-          loadPortal();
-        }
+        if (profRes.error) throw profRes.error;
+        if (!profRes.data || profRes.data.role !== "client") throw new Error("Not a client");
+
+        clientId = profRes.data.client_id;
+        var cRes = await sb.from("clients").select("*").eq("id", clientId).single();
+        if (cRes.error) throw cRes.error;
+        if (!cRes.data) throw new Error("Client not found");
+
+        clientData = cRes.data;
+        loadPortal();
+      } catch (err) {
+        // If anything fails, sign out and let them log in fresh with new password
+        errEl.textContent = "Password saved. Please sign in with your new password.";
+        errEl.style.display = "block";
+        await sb.auth.signOut();
+        setTimeout(function () { show("view-login"); }, 2000);
       }
     }
 
