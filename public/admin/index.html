@@ -947,19 +947,19 @@
   <div id="view-login">
     <div class="login-card">
       <div class="login-logo">
-        <h1>Duramax Industrial</h1>
-        <p>Paving &amp; Concrete LLC</p>
+        <h1>Duramax Industrial Paving &amp; Concrete</h1>
+        <p>Admin Portal</p>
       </div>
       <h2>Admin Portal</h2>
       <div class="form-group">
         <label class="form-label">Email</label>
         <input type="email" id="login-email" class="form-input" placeholder="admin@duramaxpavingllc.com"
-          onkeydown="if(event.key==='Enter')login()">
+          name="admin-email" autocomplete="username" onkeydown="if(event.key==='Enter')login()">
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input type="password" id="login-pass" class="form-input" placeholder="••••••••••"
-          onkeydown="if(event.key==='Enter')login()">
+        <input type="password" id="login-pass" class="form-input" placeholder="••••••••••" name="admin-password"
+          autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
       </div>
       <button class="btn-full" onclick="login()">Sign In →</button>
       <div id="login-error" class="error-msg"></div>
@@ -1365,7 +1365,7 @@
       const link = document.getElementById("d-link").textContent;
       const sub = encodeURIComponent(`Duramax – File Upload Portal | ${c?.project_name || c?.name}`);
       const body = encodeURIComponent(`Dear ${c?.name},\n\nPlease use the link below to access your secure file upload portal:\n\n${link}\n\nIf you need your login credentials resent, reply to this email.\n\nThank you,\nDuramax Industrial Paving & Concrete, LLC\n(877) 812-PAVE`);
-      window.open(`mailto:${c?.email}?subject=${sub}&body=${body}`);
+      window.location.href = `mailto:${c?.email}?subject=${sub}&body=${body}`;
     }
 
     // ── Helpers ───────────────────────────────────────────────────

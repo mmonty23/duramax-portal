@@ -543,19 +543,19 @@
   <div id="view-login" class="auth-wrap">
     <div class="auth-card">
       <div class="auth-logo">
-        <h1>Duramax Industrial</h1>
-        <p>Paving &amp; Concrete, LLC</p>
+        <h1>Duramax Industrial Paving &amp; Concrete</h1>
+        <p>LLC</p>
       </div>
       <h2>Client File Portal</h2>
       <div class="form-group">
         <label class="form-label">Email Address</label>
-        <input type="email" id="login-email" class="form-input" placeholder="you@company.com"
-          onkeydown="if(event.key==='Enter')login()">
+        <input type="email" id="login-email" class="form-input" placeholder="you@company.com" name="client-email"
+          autocomplete="off" onkeydown="if(event.key==='Enter')login()">
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input type="password" id="login-pass" class="form-input" placeholder="••••••••••"
-          onkeydown="if(event.key==='Enter')login()">
+        <input type="password" id="login-pass" class="form-input" placeholder="••••••••••" name="client-password"
+          autocomplete="off" onkeydown="if(event.key==='Enter')login()">
       </div>
       <button class="btn-full" onclick="login()">Access My Portal →</button>
       <div id="login-error" class="error-msg"></div>
@@ -566,8 +566,8 @@
   <div id="view-change-pw" class="auth-wrap hidden">
     <div class="auth-card">
       <div class="auth-logo">
-        <h1>Duramax Industrial</h1>
-        <p>Paving &amp; Concrete, LLC</p>
+        <h1>Duramax Industrial Paving &amp; Concrete</h1>
+        <p>LLC</p>
       </div>
       <div class="pw-notice">🔒 For your security, please create a personal password before continuing.</div>
       <div class="form-group">
@@ -654,12 +654,21 @@
     // Always start on login. Only advance after verifying role.
     show("view-login");
 
+    // Clear any browser-autofilled credentials (prevents admin creds showing)
+    setTimeout(function () {
+      document.getElementById("login-email").value = "";
+      document.getElementById("login-pass").value = "";
+    }, 100);
+
     sb.auth.onAuthStateChange(async function (event, session) {
+      // Only react to explicit sign-in events, not stale sessions on page load
       if (!session) {
         show("view-login");
         return;
       }
 
+      // If this is an existing session from page load (not a fresh login),
+      // check if it belongs to the right user type
       currentUser = session.user;
 
       // 1. Must be a client, not an admin
@@ -670,11 +679,10 @@
         .single();
 
       if (profileRes.error || !profileRes.data || profileRes.data.role !== "client") {
+        // Wrong user type - clear session silently and show login
         await sb.auth.signOut();
+        // Don't show error on initial page load, only on explicit login attempt
         show("view-login");
-        var errEl = document.getElementById("login-error");
-        errEl.textContent = "Access denied. This portal is for clients only.";
-        errEl.style.display = "block";
         return;
       }
 
