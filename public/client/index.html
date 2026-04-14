@@ -1,412 +1,939 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Duramax – File Upload Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Duramax – File Upload Portal</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --navy: #1a2035; --navy-dark: #0f1520; --blue: #2e6db4;
-  --blue-light: #4a8fd4; --blue-pale: #d4e6f7;
-  --asphalt: #3a3f4b; --concrete: #8a9099; --gravel: #e8eaed;
-  --white: #fff; --danger: #c0392b; --success: #1a7a4a; --bg: #f0f2f5;
-}
-body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--navy); min-height: 100vh; }
-.hidden { display: none !important; }
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-/* AUTH */
-.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--navy-dark); padding: 20px; }
-.auth-card { background: var(--white); border-radius: 10px; padding: 36px; width: 100%; max-width: 380px; box-shadow: 0 12px 48px rgba(0,0,0,.4); }
-.auth-logo { text-align: center; margin-bottom: 22px; }
-.auth-logo h1 { font-family: 'Oswald', sans-serif; font-size: 17px; color: var(--navy); letter-spacing: 2px; text-transform: uppercase; }
-.auth-logo p { font-size: 11px; color: var(--blue); letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
-.auth-card h2 { font-family: 'Oswald', sans-serif; font-size: 15px; color: var(--asphalt); text-align: center; font-weight: 400; margin-bottom: 18px; }
-.form-group { margin-bottom: 14px; }
-.form-label { display: block; font-size: 11px; font-weight: 600; color: var(--asphalt); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
-.form-input { width: 100%; padding: 10px 12px; border: 1px solid #c8cdd6; border-radius: 5px; font-size: 14px; font-family: 'Source Sans 3', sans-serif; color: var(--navy); outline: none; }
-.form-input:focus { border-color: var(--blue); }
-.btn-full { width: 100%; padding: 11px; background: var(--blue); color: var(--white); border: none; border-radius: 5px; font-family: 'Oswald', sans-serif; font-size: 15px; letter-spacing: 1px; cursor: pointer; margin-top: 4px; transition: background .15s; }
-.btn-full:hover { background: var(--blue-light); }
-.error-msg { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; text-align: center; }
-.pw-notice { background: #fff8e6; border: 1px solid #f0c06b; border-radius: 6px; padding: 12px 14px; font-size: 13px; color: #7a5500; margin-bottom: 16px; line-height: 1.5; }
+    :root {
+      --navy: #1a2035;
+      --navy-dark: #0f1520;
+      --blue: #2e6db4;
+      --blue-light: #4a8fd4;
+      --blue-pale: #d4e6f7;
+      --asphalt: #3a3f4b;
+      --concrete: #8a9099;
+      --gravel: #e8eaed;
+      --white: #fff;
+      --danger: #c0392b;
+      --success: #1a7a4a;
+      --bg: #f0f2f5;
+    }
 
-/* NAV */
-nav { background: var(--navy-dark); height: 58px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 10; }
-.nav-brand { display: flex; align-items: center; gap: 11px; }
-.nav-globe { width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #6ab4e8, #2e6db4 45%, #1a3a6e); }
-.nav-text .t1 { font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 600; color: var(--white); letter-spacing: 1.5px; }
-.nav-text .t2 { font-family: 'Oswald', sans-serif; font-size: 10px; color: var(--blue-light); letter-spacing: 1px; }
-.nav-right { display: flex; align-items: center; gap: 12px; }
-.nav-email { font-size: 12px; color: var(--concrete); display: none; }
-@media(min-width:500px) { .nav-email { display: block; } }
-.nav-logout { background: none; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.7); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-family: 'Source Sans 3', sans-serif; }
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--bg);
+      color: var(--navy);
+      min-height: 100vh;
+    }
 
-/* PORTAL */
-.portal-wrap { max-width: 720px; margin: 0 auto; padding: 28px 20px 56px; }
-.welcome-card { background: var(--white); border: 1px solid #dde0e6; border-radius: 8px; padding: 18px 22px; margin-bottom: 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.wc-icon { font-size: 28px; flex-shrink: 0; }
-.wc-info { flex: 1; }
-.wc-name { font-family: 'Oswald', sans-serif; font-size: 18px; color: var(--navy); }
-.wc-meta { font-size: 13px; color: var(--concrete); margin-top: 2px; }
-.wc-badge { background: var(--blue-pale); color: var(--blue); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 10px; align-self: flex-start; }
+    .hidden {
+      display: none !important;
+    }
 
-.security-note { background: #f0f6fd; border: 1px solid var(--blue-pale); border-radius: 6px; padding: 11px 16px; font-size: 12px; color: var(--asphalt); margin-bottom: 18px; line-height: 1.6; }
+    /* AUTH */
+    .auth-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--navy-dark);
+      padding: 20px;
+    }
 
-/* DROP ZONE */
-.drop-zone { border: 2px dashed #b0b8c6; border-radius: 8px; background: var(--white); padding: 36px 24px; text-align: center; cursor: pointer; transition: all .2s; margin-bottom: 18px; }
-.drop-zone:hover, .drop-zone.drag { border-color: var(--blue); background: #f0f6fd; }
-.dz-icon { font-size: 32px; margin-bottom: 10px; }
-.dz-title { font-family: 'Oswald', sans-serif; font-size: 17px; color: var(--navy); margin-bottom: 6px; }
-.dz-sub { font-size: 14px; color: var(--concrete); }
-.dz-sub strong { color: var(--blue); cursor: pointer; }
-.dz-types { font-size: 11px; color: var(--concrete); margin-top: 6px; }
-.upload-btn { display: inline-block; margin-top: 14px; padding: 10px 28px; background: var(--blue); color: var(--white); border: none; border-radius: 5px; font-family: 'Oswald', sans-serif; font-size: 14px; letter-spacing: 1px; cursor: pointer; }
-.upload-btn:hover { background: var(--blue-light); }
+    .auth-card {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 36px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, .4);
+    }
 
-/* PROGRESS */
-#progress-area { display: none; background: var(--white); border: 1px solid #dde0e6; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-.prog-title { font-family: 'Oswald', sans-serif; font-size: 13px; color: var(--navy); margin-bottom: 12px; letter-spacing: .5px; }
-.prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.prog-name { font-size: 12px; color: var(--navy); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.prog-bar-wrap { flex: 2; background: var(--gravel); border-radius: 10px; height: 6px; overflow: hidden; min-width: 80px; }
-.prog-bar { height: 100%; background: var(--blue); border-radius: 10px; width: 0%; transition: width .2s; }
-.prog-pct { font-size: 11px; color: var(--concrete); min-width: 34px; text-align: right; }
-.prog-done { color: var(--success); font-size: 13px; min-width: 18px; }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 22px;
+    }
 
-/* FILES */
-.files-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.files-title { font-family: 'Oswald', sans-serif; font-size: 15px; color: var(--navy); }
-.file-count-badge { background: var(--blue-pale); color: var(--blue); font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; }
-.file-row { background: var(--white); border: 1px solid #e2e5ea; border-radius: 6px; display: flex; align-items: center; padding: 11px 14px; gap: 12px; margin-bottom: 4px; transition: border-color .12s; }
-.file-row:hover { border-color: #b0bfcc; }
-.file-icon { font-size: 18px; flex-shrink: 0; }
-.file-name-wrap { flex: 1; min-width: 0; }
-.file-name { font-size: 14px; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.file-meta { font-size: 11px; color: var(--concrete); margin-top: 1px; }
-.dl-btn { background: none; border: 1px solid #dde0e6; border-radius: 4px; padding: 5px 12px; font-size: 12px; color: var(--blue); text-decoration: none; flex-shrink: 0; transition: background .12s; cursor: pointer; }
-.dl-btn:hover { background: var(--blue-pale); }
-.loading, .empty-state { padding: 28px; text-align: center; color: var(--concrete); font-size: 14px; }
+    .auth-logo h1 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 17px;
+      color: var(--navy);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
 
-/* TOAST */
-.toast { position: fixed; bottom: 24px; right: 24px; z-index: 300; background: var(--navy-dark); color: var(--white); padding: 12px 20px; border-radius: 6px; font-size: 14px; border-left: 3px solid var(--blue); transform: translateY(60px); opacity: 0; transition: all .3s; pointer-events: none; max-width: 320px; }
-.toast.show { transform: translateY(0); opacity: 1; }
-.toast.err { border-left-color: var(--danger); }
-</style>
+    .auth-logo p {
+      font-size: 11px;
+      color: var(--blue);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    .auth-card h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 15px;
+      color: var(--asphalt);
+      text-align: center;
+      font-weight: 400;
+      margin-bottom: 18px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--asphalt);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #c8cdd6;
+      border-radius: 5px;
+      font-size: 14px;
+      font-family: 'Source Sans 3', sans-serif;
+      color: var(--navy);
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--blue);
+    }
+
+    .btn-full {
+      width: 100%;
+      padding: 11px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 5px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 15px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background .15s;
+    }
+
+    .btn-full:hover {
+      background: var(--blue-light);
+    }
+
+    .error-msg {
+      color: var(--danger);
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+      text-align: center;
+    }
+
+    .pw-notice {
+      background: #fff8e6;
+      border: 1px solid #f0c06b;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #7a5500;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--navy-dark);
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 3px solid var(--blue);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .nav-globe {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #6ab4e8, #2e6db4 45%, #1a3a6e);
+    }
+
+    .nav-text .t1 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: 1.5px;
+    }
+
+    .nav-text .t2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 10px;
+      color: var(--blue-light);
+      letter-spacing: 1px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-email {
+      font-size: 12px;
+      color: var(--concrete);
+      display: none;
+    }
+
+    @media(min-width:500px) {
+      .nav-email {
+        display: block;
+      }
+    }
+
+    .nav-logout {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, .2);
+      color: rgba(255, 255, 255, .7);
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Source Sans 3', sans-serif;
+    }
+
+    /* PORTAL */
+    .portal-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 20px 56px;
+    }
+
+    .welcome-card {
+      background: var(--white);
+      border: 1px solid #dde0e6;
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .wc-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .wc-info {
+      flex: 1;
+    }
+
+    .wc-name {
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      color: var(--navy);
+    }
+
+    .wc-meta {
+      font-size: 13px;
+      color: var(--concrete);
+      margin-top: 2px;
+    }
+
+    .wc-badge {
+      background: var(--blue-pale);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 10px;
+      align-self: flex-start;
+    }
+
+    .security-note {
+      background: #f0f6fd;
+      border: 1px solid var(--blue-pale);
+      border-radius: 6px;
+      padding: 11px 16px;
+      font-size: 12px;
+      color: var(--asphalt);
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
+    /* DROP ZONE */
+    .drop-zone {
+      border: 2px dashed #b0b8c6;
+      border-radius: 8px;
+      background: var(--white);
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      margin-bottom: 18px;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag {
+      border-color: var(--blue);
+      background: #f0f6fd;
+    }
+
+    .dz-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .dz-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 17px;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .dz-sub {
+      font-size: 14px;
+      color: var(--concrete);
+    }
+
+    .dz-sub strong {
+      color: var(--blue);
+      cursor: pointer;
+    }
+
+    .dz-types {
+      font-size: 11px;
+      color: var(--concrete);
+      margin-top: 6px;
+    }
+
+    .upload-btn {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 10px 28px;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 5px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 14px;
+      letter-spacing: 1px;
+      cursor: pointer;
+    }
+
+    .upload-btn:hover {
+      background: var(--blue-light);
+    }
+
+    /* PROGRESS */
+    #progress-area {
+      display: none;
+      background: var(--white);
+      border: 1px solid #dde0e6;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .prog-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 13px;
+      color: var(--navy);
+      margin-bottom: 12px;
+      letter-spacing: .5px;
+    }
+
+    .prog-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .prog-name {
+      font-size: 12px;
+      color: var(--navy);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .prog-bar-wrap {
+      flex: 2;
+      background: var(--gravel);
+      border-radius: 10px;
+      height: 6px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+
+    .prog-bar {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 10px;
+      width: 0%;
+      transition: width .2s;
+    }
+
+    .prog-pct {
+      font-size: 11px;
+      color: var(--concrete);
+      min-width: 34px;
+      text-align: right;
+    }
+
+    .prog-done {
+      color: var(--success);
+      font-size: 13px;
+      min-width: 18px;
+    }
+
+    /* FILES */
+    .files-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .files-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 15px;
+      color: var(--navy);
+    }
+
+    .file-count-badge {
+      background: var(--blue-pale);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 10px;
+    }
+
+    .file-row {
+      background: var(--white);
+      border: 1px solid #e2e5ea;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 11px 14px;
+      gap: 12px;
+      margin-bottom: 4px;
+      transition: border-color .12s;
+    }
+
+    .file-row:hover {
+      border-color: #b0bfcc;
+    }
+
+    .file-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .file-name-wrap {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-name {
+      font-size: 14px;
+      color: var(--navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-meta {
+      font-size: 11px;
+      color: var(--concrete);
+      margin-top: 1px;
+    }
+
+    .dl-btn {
+      background: none;
+      border: 1px solid #dde0e6;
+      border-radius: 4px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: var(--blue);
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: background .12s;
+      cursor: pointer;
+    }
+
+    .dl-btn:hover {
+      background: var(--blue-pale);
+    }
+
+    .loading,
+    .empty-state {
+      padding: 28px;
+      text-align: center;
+      color: var(--concrete);
+      font-size: 14px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 300;
+      background: var(--navy-dark);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      border-left: 3px solid var(--blue);
+      transform: translateY(60px);
+      opacity: 0;
+      transition: all .3s;
+      pointer-events: none;
+      max-width: 320px;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.err {
+      border-left-color: var(--danger);
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- LOGIN -->
-<div id="view-login" class="auth-wrap">
-  <div class="auth-card">
-    <div class="auth-logo"><h1>Duramax Industrial</h1><p>Paving &amp; Concrete LLC</p></div>
-    <h2>Client File Portal</h2>
-    <div class="form-group">
-      <label class="form-label">Email Address</label>
-      <input type="email" id="login-email" class="form-input" placeholder="you@company.com" onkeydown="if(event.key==='Enter')login()">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input type="password" id="login-pass" class="form-input" placeholder="••••••••••" onkeydown="if(event.key==='Enter')login()">
-    </div>
-    <button class="btn-full" onclick="login()">Access My Portal →</button>
-    <div id="login-error" class="error-msg"></div>
-  </div>
-</div>
-
-<!-- CHANGE PASSWORD -->
-<div id="view-change-pw" class="auth-wrap hidden">
-  <div class="auth-card">
-    <div class="auth-logo"><h1>Duramax Industrial</h1><p>Paving &amp; Concrete LLC</p></div>
-    <div class="pw-notice">🔒 For your security, please create a personal password before continuing.</div>
-    <div class="form-group">
-      <label class="form-label">New Password</label>
-      <input type="password" id="pw-new" class="form-input" placeholder="At least 8 characters">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Confirm New Password</label>
-      <input type="password" id="pw-confirm" class="form-input" placeholder="Repeat password">
-    </div>
-    <button class="btn-full" onclick="setNewPassword()">Set My Password →</button>
-    <div id="pw-error" class="error-msg"></div>
-  </div>
-</div>
-
-<!-- PORTAL -->
-<div id="view-portal" class="hidden">
-  <nav>
-    <div class="nav-brand">
-      <div class="nav-globe"></div>
-      <div class="nav-text"><div class="t1">Duramax Industrial</div><div class="t2">Client File Portal</div></div>
-    </div>
-    <div class="nav-right">
-      <span class="nav-email" id="nav-email"></span>
-      <button class="nav-logout" onclick="logout()">Sign Out</button>
-    </div>
-  </nav>
-
-  <div class="portal-wrap">
-    <div class="welcome-card">
-      <div class="wc-icon">📁</div>
-      <div class="wc-info">
-        <div class="wc-name" id="wc-company">—</div>
-        <div class="wc-meta">Project: <span id="wc-project">—</span></div>
+  <!-- LOGIN -->
+  <div id="view-login" class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <h1>Duramax Industrial</h1>
+        <p>Paving &amp; Concrete, LLC</p>
       </div>
-      <span class="wc-badge">Your Private Folder</span>
+      <h2>Client File Portal</h2>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="login-email" class="form-input" placeholder="you@company.com"
+          onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="login-pass" class="form-input" placeholder="••••••••••"
+          onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <button class="btn-full" onclick="login()">Access My Portal →</button>
+      <div id="login-error" class="error-msg"></div>
     </div>
-
-    <div class="security-note">🔒 Your folder is private and isolated — only you and the Duramax team can view your files. Upload full-resolution photos and large documents with no file size limit.</div>
-
-    <div class="drop-zone" id="drop-zone"
-         ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="drop(event)">
-      <div class="dz-icon">☁️</div>
-      <div class="dz-title">Upload Job Site Files</div>
-      <div class="dz-sub">Drag &amp; drop here, or <strong onclick="triggerUpload()">click to browse</strong></div>
-      <div class="dz-types">JPG &bull; PNG &bull; PDF &bull; HEIC &bull; No size limit</div>
-      <button class="upload-btn" onclick="triggerUpload()">Select Files</button>
-    </div>
-    <input type="file" id="file-input" multiple accept="image/*,.pdf,.heic" style="display:none" onchange="handleSelect(event)">
-
-    <div id="progress-area">
-      <div class="prog-title">UPLOADING</div>
-      <div id="prog-rows"></div>
-    </div>
-
-    <div class="files-hdr">
-      <div class="files-title">Your Uploaded Files</div>
-      <span class="file-count-badge" id="file-count">0 files</span>
-    </div>
-    <div id="file-list"><div class="loading">Loading your files…</div></div>
   </div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <!-- CHANGE PASSWORD (first login) -->
+  <div id="view-change-pw" class="auth-wrap hidden">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <h1>Duramax Industrial</h1>
+        <p>Paving &amp; Concrete, LLC</p>
+      </div>
+      <div class="pw-notice">🔒 For your security, please create a personal password before continuing.</div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" id="pw-new" class="form-input" placeholder="At least 8 characters">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input type="password" id="pw-confirm" class="form-input" placeholder="Repeat password">
+      </div>
+      <button class="btn-full" onclick="setNewPassword()">Set My Password →</button>
+      <div id="pw-error" class="error-msg"></div>
+    </div>
+  </div>
 
-<script>
-const SUPABASE_URL  = "https://ftioogukfybrnkfiydym.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0aW9vZ3VrZnlicm5rZml5ZHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzU0ODYsImV4cCI6MjA5MTYxMTQ4Nn0.6RxFBUMYKd-011ZuhJCQ2ix86Dbpfwoexyy2ZDhQoiw";
-
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-
-let clientId   = null;
-let clientData = null;
-let currentUser = null;
-let needsPwChange = false;
-
-// Get clientId from URL (optional — used for direct link)
-const urlParams   = new URLSearchParams(window.location.search);
-const urlClientId = urlParams.get("client");
-
-// ── Auth ─────────────────────────────────────────────────────
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (!session) { show("view-login"); return; }
-  currentUser = session.user;
-
-  // Check if user needs to set a new password (first login flag in metadata)
-  const meta = session.user.user_metadata || {};
-  if (!meta.pw_set) {
-    show("view-change-pw"); return;
-  }
-
-  // Get profile
-  const { data: profile } = await sb.from("profiles").select("role, client_id").eq("id", session.user.id).single();
-  if (!profile || profile.role !== "client") { await sb.auth.signOut(); show("view-login"); return; }
-
-  clientId = profile.client_id;
-
-  // Get client record
-  const { data: client } = await sb.from("clients").select("*").eq("id", clientId).single();
-  if (!client) { await sb.auth.signOut(); show("view-login"); return; }
-  clientData = client;
-
-  loadPortal();
-});
-
-async function login() {
-  const email = document.getElementById("login-email").value.trim();
-  const pass  = document.getElementById("login-pass").value;
-  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if (error) { document.getElementById("login-error").textContent = "Invalid email or password."; document.getElementById("login-error").style.display = "block"; }
-}
-
-async function logout() { await sb.auth.signOut(); show("view-login"); }
-
-// ── Set New Password ──────────────────────────────────────────
-async function setNewPassword() {
-  const newPw  = document.getElementById("pw-new").value;
-  const confPw = document.getElementById("pw-confirm").value;
-  const errEl  = document.getElementById("pw-error");
-
-  if (newPw.length < 8) { errEl.textContent = "Password must be at least 8 characters."; errEl.style.display = "block"; return; }
-  if (newPw !== confPw)  { errEl.textContent = "Passwords do not match."; errEl.style.display = "block"; return; }
-
-  const { error } = await sb.auth.updateUser({
-    password: newPw,
-    data: { pw_set: true }
-  });
-
-  if (error) { errEl.textContent = "Error: " + error.message; errEl.style.display = "block"; return; }
-  toast("Password set successfully! Welcome to your portal.");
-
-  // Re-fetch session to trigger auth state change and load portal
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    const { data: profile } = await sb.from("profiles").select("role, client_id").eq("id", session.user.id).single();
-    clientId = profile?.client_id;
-    const { data: client } = await sb.from("clients").select("*").eq("id", clientId).single();
-    clientData = client;
-    loadPortal();
-  }
-}
-
-// ── Load Portal ───────────────────────────────────────────────
-function loadPortal() {
-  document.getElementById("wc-company").textContent  = clientData.name;
-  document.getElementById("wc-project").textContent  = clientData.project_name || "General";
-  document.getElementById("nav-email").textContent   = currentUser.email;
-  show("view-portal");
-  loadFiles();
-}
-
-// ── Load Files ────────────────────────────────────────────────
-async function loadFiles() {
-  const list = document.getElementById("file-list");
-  list.innerHTML = `<div class="loading">Loading your files…</div>`;
-  try {
-    const { data, error } = await sb.storage.from("client-files").list(`clients/${clientId}`, {
-      sortBy: { column: "created_at", order: "desc" }
-    });
-    if (error) throw error;
-
-    const files = (data || []).filter(f => f.name && f.name !== ".emptyFolderPlaceholder");
-    document.getElementById("file-count").textContent = files.length + " files";
-
-    if (!files.length) {
-      list.innerHTML = `<div class="empty-state">No files uploaded yet.<br>Use the upload area above to add your first file.</div>`;
-      return;
-    }
-
-    list.innerHTML = files.map(f => {
-      const displayName = f.name.replace(/^\d+_/, "");
-      const ext  = displayName.split(".").pop().toLowerCase();
-      const icon = ["jpg","jpeg","png","heic","webp"].includes(ext) ? "🖼" : "📄";
-      const size = f.metadata?.size ? formatSize(f.metadata.size) : "";
-      const date = f.created_at ? new Date(f.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "";
-      return `<div class="file-row">
-        <span class="file-icon">${icon}</span>
-        <div class="file-name-wrap">
-          <div class="file-name">${displayName}</div>
-          <div class="file-meta">${[date,size].filter(Boolean).join(" · ")}</div>
+  <!-- PORTAL (only shown after successful auth + role check) -->
+  <div id="view-portal" class="hidden">
+    <nav>
+      <div class="nav-brand">
+        <div class="nav-globe"></div>
+        <div class="nav-text">
+          <div class="t1">Duramax Industrial Paving &amp; Concrete</div>
+          <div class="t2">Client File Portal</div>
         </div>
-        <button class="dl-btn" onclick="downloadFile('${f.name}')">Download ⬇</button>
-      </div>`;
-    }).join("");
-  } catch (err) {
-    list.innerHTML = `<div class="empty-state">Error loading files: ${err.message}</div>`;
-  }
-}
+      </div>
+      <div class="nav-right">
+        <span class="nav-email" id="nav-email"></span>
+        <button class="nav-logout" onclick="logout()">Sign Out</button>
+      </div>
+    </nav>
 
-async function downloadFile(fileName) {
-  const { data, error } = await sb.storage.from("client-files").createSignedUrl(`clients/${clientId}/${fileName}`, 60);
-  if (error) { toast("Error: " + error.message, true); return; }
-  window.open(data.signedUrl, "_blank");
-}
+    <div class="portal-wrap">
+      <div class="welcome-card">
+        <div class="wc-icon">📁</div>
+        <div class="wc-info">
+          <div class="wc-name" id="wc-company">—</div>
+          <div class="wc-meta">Project: <span id="wc-project">—</span></div>
+        </div>
+        <span class="wc-badge">Your Private Folder</span>
+      </div>
 
-// ── Upload ────────────────────────────────────────────────────
-function triggerUpload() { document.getElementById("file-input").click(); }
-function handleSelect(e) { uploadFiles(Array.from(e.target.files)); e.target.value = ""; }
-function dragOver(e)  { e.preventDefault(); document.getElementById("drop-zone").classList.add("drag"); }
-function dragLeave()  { document.getElementById("drop-zone").classList.remove("drag"); }
-function drop(e)      { e.preventDefault(); document.getElementById("drop-zone").classList.remove("drag"); uploadFiles(Array.from(e.dataTransfer.files)); }
+      <div class="security-note">🔒 Your folder is private and isolated — only you and the Duramax team can view your
+        files. Upload full-resolution photos and large documents with no file size limit.</div>
 
-async function uploadFiles(files) {
-  if (!files.length) return;
+      <div class="drop-zone" id="drop-zone" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="drop(event)">
+        <div class="dz-icon">☁️</div>
+        <div class="dz-title">Upload Job Site Files</div>
+        <div class="dz-sub">Drag &amp; drop here, or <strong onclick="triggerUpload()">click to browse</strong></div>
+        <div class="dz-types">JPG • PNG • PDF • HEIC • No size limit</div>
+        <button class="upload-btn" onclick="triggerUpload()">Select Files</button>
+      </div>
+      <input type="file" id="file-input" multiple accept="image/*,.pdf,.heic" style="display:none"
+        onchange="handleSelect(event)">
 
-  const area = document.getElementById("progress-area");
-  const rows = document.getElementById("prog-rows");
-  area.style.display = "block";
-  rows.innerHTML = "";
+      <div id="progress-area">
+        <div class="prog-title">UPLOADING</div>
+        <div id="prog-rows"></div>
+      </div>
 
-  const allowed = ["image/jpeg","image/png","image/webp","image/heic","application/pdf"];
+      <div class="files-hdr">
+        <div class="files-title">Your Uploaded Files</div>
+        <span class="file-count-badge" id="file-count">0 files</span>
+      </div>
+      <div id="file-list">
+        <div class="loading">Loading your files…</div>
+      </div>
+    </div>
+  </div>
 
-  for (const file of files) {
-    if (!allowed.includes(file.type) && !file.name.match(/\.(heic|jpg|jpeg|png|webp|pdf)$/i)) {
-      toast(`Skipped: ${file.name} — unsupported file type`, true);
-      continue;
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── Supabase init ────────────────────────────────────────────
+    var SUPABASE_URL = "https://ftioogukfybrnkfiydym.supabase.co";
+    var SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0aW9vZ3VrZnlicm5rZml5ZHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMzU0ODYsImV4cCI6MjA5MTYxMTQ4Nn0.6RxFBUMYKd-011ZuhJCQ2ix86Dbpfwoexyy2ZDhQoiw";
+
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    var clientId = null;
+    var clientData = null;
+    var currentUser = null;
+
+    // ── Auth ─────────────────────────────────────────────────────
+    // Always start on login. Only advance after verifying role.
+    show("view-login");
+
+    sb.auth.onAuthStateChange(async function (event, session) {
+      if (!session) {
+        show("view-login");
+        return;
+      }
+
+      currentUser = session.user;
+
+      // 1. Must be a client, not an admin
+      var profileRes = await sb
+        .from("profiles")
+        .select("role, client_id")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profileRes.error || !profileRes.data || profileRes.data.role !== "client") {
+        await sb.auth.signOut();
+        show("view-login");
+        var errEl = document.getElementById("login-error");
+        errEl.textContent = "Access denied. This portal is for clients only.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      var profile = profileRes.data;
+
+      // 2. First login? Force password change
+      var meta = session.user.user_metadata || {};
+      if (!meta.pw_set) {
+        show("view-change-pw");
+        return;
+      }
+
+      // 3. Load ONLY this client's folder
+      clientId = profile.client_id;
+
+      var clientRes = await sb
+        .from("clients")
+        .select("*")
+        .eq("id", clientId)
+        .single();
+
+      if (!clientRes.data) {
+        await sb.auth.signOut();
+        show("view-login");
+        return;
+      }
+
+      clientData = clientRes.data;
+      loadPortal();
+    });
+
+    async function login() {
+      var email = document.getElementById("login-email").value.trim();
+      var pass = document.getElementById("login-pass").value;
+      var errEl = document.getElementById("login-error");
+
+      if (!email || !pass) {
+        errEl.textContent = "Please enter your email and password.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      errEl.style.display = "none";
+      var result = await sb.auth.signInWithPassword({ email: email, password: pass });
+      if (result.error) {
+        errEl.textContent = "Invalid email or password.";
+        errEl.style.display = "block";
+      }
     }
 
-    const safeId = "p" + Math.random().toString(36).slice(2);
-    const displayName = file.name;
-    const row = document.createElement("div");
-    row.className = "prog-row";
-    row.innerHTML = `
-      <span class="prog-name" title="${displayName}">${displayName}</span>
-      <div class="prog-bar-wrap"><div class="prog-bar" id="bar-${safeId}"></div></div>
-      <span class="prog-pct" id="pct-${safeId}">0%</span>
-      <span class="prog-done" id="done-${safeId}"></span>`;
-    rows.appendChild(row);
-
-    const path = `clients/${clientId}/${Date.now()}_${file.name}`;
-
-    // Supabase JS v2 doesn't expose XHR upload progress natively,
-    // so we simulate progress and do the upload
-    let simInterval = simulateProgress(safeId);
-
-    const { error } = await sb.storage.from("client-files").upload(path, file, { upsert: false });
-
-    clearInterval(simInterval);
-    const bar  = document.getElementById("bar-" + safeId);
-    const pct  = document.getElementById("pct-" + safeId);
-    const done = document.getElementById("done-" + safeId);
-
-    if (error) {
-      if (bar)  bar.style.background = "#c0392b";
-      if (pct)  pct.textContent = "Failed";
-      toast("Upload failed: " + error.message, true);
-    } else {
-      if (bar)  bar.style.width = "100%";
-      if (pct)  pct.style.display = "none";
-      if (done) done.textContent = "✓";
-      toast("Uploaded: " + displayName);
+    async function logout() {
+      await sb.auth.signOut();
+      clientId = null;
+      clientData = null;
+      currentUser = null;
+      show("view-login");
     }
-  }
 
-  setTimeout(() => { area.style.display = "none"; rows.innerHTML = ""; }, 3000);
-  loadFiles();
-}
+    // ── Set New Password (first login) ───────────────────────────
+    async function setNewPassword() {
+      var newPw = document.getElementById("pw-new").value;
+      var confPw = document.getElementById("pw-confirm").value;
+      var errEl = document.getElementById("pw-error");
 
-function simulateProgress(safeId) {
-  let progress = 0;
-  return setInterval(() => {
-    progress = Math.min(progress + Math.random() * 12, 92);
-    const bar = document.getElementById("bar-" + safeId);
-    const pct = document.getElementById("pct-" + safeId);
-    if (bar) bar.style.width = Math.round(progress) + "%";
-    if (pct) pct.textContent = Math.round(progress) + "%";
-  }, 200);
-}
+      if (newPw.length < 8) {
+        errEl.textContent = "Password must be at least 8 characters.";
+        errEl.style.display = "block";
+        return;
+      }
+      if (newPw !== confPw) {
+        errEl.textContent = "Passwords do not match.";
+        errEl.style.display = "block";
+        return;
+      }
 
-// ── Helpers ───────────────────────────────────────────────────
-function show(id) {
-  ["view-login","view-change-pw","view-portal"].forEach(v =>
-    document.getElementById(v)?.classList.toggle("hidden", v !== id)
-  );
-}
-function formatSize(bytes) {
-  if (bytes >= 1048576) return (bytes/1048576).toFixed(1) + " MB";
-  return Math.round(bytes/1024) + " KB";
-}
-let toastTimer;
-function toast(msg, err = false) {
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.className = "toast show" + (err ? " err" : "");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 4000);
-}
-</script>
+      var result = await sb.auth.updateUser({
+        password: newPw,
+        data: { pw_set: true }
+      });
+
+      if (result.error) {
+        errEl.textContent = "Error: " + result.error.message;
+        errEl.style.display = "block";
+        return;
+      }
+
+      toast("Password set successfully!");
+
+      // Reload profile and enter portal
+      var sessRes = await sb.auth.getSession();
+      if (sessRes.data.session) {
+        currentUser = sessRes.data.session.user;
+        var profRes = await sb.from("profiles").select("role, client_id").eq("id", currentUser.id).single();
+        if (profRes.data && profRes.data.role === "client") {
+          clientId = profRes.data.client_id;
+          var cRes = await sb.from("clients").select("*").eq("id", clientId).single();
+          clientData = cRes.data;
+          loadPortal();
+        }
+      }
+    }
+
+    // ── Load Portal ──────────────────────────────────────────────
+    function loadPortal() {
+      if (!clientData) return;
+      document.getElementById("wc-company").textContent = clientData.name;
+      document.getElementById("wc-project").textContent = clientData.project_name || "General";
+      document.getElementById("nav-email").textContent = currentUser.email;
+      show("view-portal");
+      loadFiles();
+    }
+
+    // ── Load Files (only this client's folder) ───────────────────
+    async function loadFiles() {
+      var list = document.getElementById("file-list");
+      list.innerHTML = '<div class="loading">Loading your files…</div>';
+      try {
+        var result = await sb.storage
+          .from("client-files")
+          .list("clients/" + clientId, {
+            sortBy: { column: "created_at", order: "desc" }
+          });
+        if (result.error) throw result.error;
+
+        var files = (result.data || []).filter(function (f) {
+          return f.name && f.name !== ".emptyFolderPlaceholder";
+        });
+        document.getElementById("file-count").textContent = files.length + " files";
+
+        if (!files.length) {
+          list.innerHTML = '<div class="empty-state">No files uploaded yet.<br>Use the upload area above to add your first file.</div>';
+          return;
+        }
+
+        list.innerHTML = files.map(function (f) {
+          var displayName = f.name.replace(/^\d+_/, "");
+          var ext = displayName.split(".").pop().toLowerCase();
+          var icon = ["jpg", "jpeg", "png", "heic", "webp"].indexOf(ext) >= 0 ? "🖼" : "📄";
+          var size = f.metadata && f.metadata.size ? formatSize(f.metadata.size) : "";
+          var date = f.created_at
+            ? new Date(f.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+            : "";
+          var meta = [date, size].filter(Boolean).join(" · ");
+          var safeName = f.name.replace(/'/g, "\\'");
+          return '<div class="file-row">' +
+            '<span class="file-icon">' + icon + '</span>' +
+            '<div class="file-name-wrap">' +
+            '<div class="file-name">' + displayName + '</div>' +
+            '<div class="file-meta">' + meta + '</div>' +
+            '</div>' +
+            '<button class="dl-btn" onclick="downloadFile(\'' + safeName + '\')">Download ⬇</button>' +
+            '</div>';
+        }).join("");
+      } catch (err) {
+        list.innerHTML = '<div class="empty-state">Error loading files: ' + err.message + '</div>';
+      }
+    }
+
+    async function downloadFile(fileName) {
+      var result = await sb.storage
+        .from("client-files")
+        .createSignedUrl("clients/" + clientId + "/" + fileName, 60);
+      if (result.error) { toast("Error: " + result.error.message, true); return; }
+      window.open(result.data.signedUrl, "_blank");
+    }
+
+    // ── Upload ───────────────────────────────────────────────────
+    function triggerUpload() { document.getElementById("file-input").click(); }
+    function handleSelect(e) { uploadFiles(Array.from(e.target.files)); e.target.value = ""; }
+    function dragOver(e) { e.preventDefault(); document.getElementById("drop-zone").classList.add("drag"); }
+    function dragLeave() { document.getElementById("drop-zone").classList.remove("drag"); }
+    function drop(e) { e.preventDefault(); document.getElementById("drop-zone").classList.remove("drag"); uploadFiles(Array.from(e.dataTransfer.files)); }
+
+    async function uploadFiles(files) {
+      if (!files.length || !clientId) return;
+
+      var area = document.getElementById("progress-area");
+      var rows = document.getElementById("prog-rows");
+      area.style.display = "block";
+      rows.innerHTML = "";
+
+      var allowed = ["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"];
+
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        if (allowed.indexOf(file.type) < 0 && !file.name.match(/\.(heic|jpg|jpeg|png|webp|pdf)$/i)) {
+          toast("Skipped: " + file.name + " — unsupported file type", true);
+          continue;
+        }
+
+        var safeId = "p" + Math.random().toString(36).slice(2);
+        var row = document.createElement("div");
+        row.className = "prog-row";
+        row.innerHTML =
+          '<span class="prog-name" title="' + file.name + '">' + file.name + '</span>' +
+          '<div class="prog-bar-wrap"><div class="prog-bar" id="bar-' + safeId + '"></div></div>' +
+          '<span class="prog-pct" id="pct-' + safeId + '">0%</span>' +
+          '<span class="prog-done" id="done-' + safeId + '"></span>';
+        rows.appendChild(row);
+
+        var path = "clients/" + clientId + "/" + Date.now() + "_" + file.name;
+
+        var simInterval = simulateProgress(safeId);
+        var uploadResult = await sb.storage.from("client-files").upload(path, file, { upsert: false });
+        clearInterval(simInterval);
+
+        var bar = document.getElementById("bar-" + safeId);
+        var pct = document.getElementById("pct-" + safeId);
+        var done = document.getElementById("done-" + safeId);
+
+        if (uploadResult.error) {
+          if (bar) bar.style.background = "#c0392b";
+          if (pct) pct.textContent = "Failed";
+          toast("Upload failed: " + uploadResult.error.message, true);
+        } else {
+          if (bar) bar.style.width = "100%";
+          if (pct) pct.style.display = "none";
+          if (done) done.textContent = "✓";
+          toast("Uploaded: " + file.name);
+        }
+      }
+
+      setTimeout(function () { area.style.display = "none"; rows.innerHTML = ""; }, 3000);
+      loadFiles();
+    }
+
+    function simulateProgress(safeId) {
+      var progress = 0;
+      return setInterval(function () {
+        progress = Math.min(progress + Math.random() * 12, 92);
+        var bar = document.getElementById("bar-" + safeId);
+        var pct = document.getElementById("pct-" + safeId);
+        if (bar) bar.style.width = Math.round(progress) + "%";
+        if (pct) pct.textContent = Math.round(progress) + "%";
+      }, 200);
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function show(id) {
+      ["view-login", "view-change-pw", "view-portal"].forEach(function (v) {
+        var el = document.getElementById(v);
+        if (el) el.classList.toggle("hidden", v !== id);
+      });
+    }
+
+    function formatSize(bytes) {
+      if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + " MB";
+      return Math.round(bytes / 1024) + " KB";
+    }
+
+    var toastTimer;
+    function toast(msg, err) {
+      var t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "toast show" + (err ? " err" : "");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove("show"); }, 4000);
+    }
+  </script>
 </body>
+
 </html>
